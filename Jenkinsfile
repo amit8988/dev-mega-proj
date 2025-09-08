@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -15,9 +16,7 @@ pipeline {
 
         stage('Checkout from SCM') {
             steps {
-                git branch: 'main', 
-                    credentialsId: 'github', 
-                    url: 'https://github.com/Devops1224789/Devops-Mega-project.git'
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/Devops1224789/Devops-Mega-project.git'
             }
         }
 
@@ -33,11 +32,15 @@ pipeline {
             }
         }
 
+        // ✅ Corrected SonarQube Analysis Stage
         stage('Sonarqube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
-                        sh 'mvn sonar:sonar'
+                    // Replace 'sonarqube-server' with your actual SonarQube server name configured in Jenkins
+                    withSonarQubeEnv('sonarqube-server') {
+                        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                            sh 'mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN'
+                        }
                     }
                 }
             }
@@ -53,11 +56,11 @@ pipeline {
     }
 
     post {
-        success {
-            echo '✅ Build completed successfully!'
-        }
         failure {
-            echo '❌ Build failed!'
+            echo "❌ Build failed!"
+        }
+        success {
+            echo "✅ Build succeeded!"
         }
     }
 }
