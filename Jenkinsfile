@@ -1,56 +1,63 @@
-pipeline{
+pipeline {
     agent any
-    
+
     tools {
         jdk 'Java17'
         maven 'Maven3'
     }
-stages{
-        stage("Cleanup Workspace"){
+
+    stages {
+        stage('Cleanup Workspace') {
             steps {
                 cleanWs()
             }
         }
 
-        stage("Checkout from SCM"){
+        stage('Checkout from SCM') {
             steps {
-                git branch: 'main', credentialsId: 'github', url: 'https://github.com/Devops1224789/Devops-Mega-project.git'
+                git branch: 'main', 
+                    credentialsId: 'github', 
+                    url: 'https://github.com/Devops1224789/Devops-Mega-project.git'
             }
-
         }
 
-
-        stage("Build the application"){
+        stage('Build the application') {
             steps {
-               sh "mvn clean package"
+                sh 'mvn clean package'
             }
-
         }
 
-        stage("Test the application"){
+        stage('Test the application') {
             steps {
-               sh "mvn test"
+                sh 'mvn test'
             }
-
         }
 
-        stage("Sonarqube Analysis") {
+        stage('Sonarqube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token'){
-                        sh "mvn sonar:sonar"
+                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
+                        sh 'mvn sonar:sonar'
                     }
                 }
             }
         }
 
-        stage("Quality Gate") {
+        stage('Quality Gate') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                    waitForQualityGate abortPipeline: true
                 }
             }
-
         }
-}
+    }
+
+    post {
+        success {
+            echo '✅ Build completed successfully!'
+        }
+        failure {
+            echo '❌ Build failed!'
+        }
+    }
 }
